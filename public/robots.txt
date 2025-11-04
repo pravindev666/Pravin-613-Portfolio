@@ -3,3 +3,4 @@ Allow: /
 
 # Optional placeholder sitemap
 Sitemap: https://pravinmathew.netlify.app/sitemap.xml
+Sitemap: https://pravinmathew.netlify.app/sitemap-index.xml
