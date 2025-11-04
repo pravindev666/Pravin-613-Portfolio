@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import emailjs from '@emailjs/browser';
 import { brandIconMap, awsServiceIcons, skillCardVariants, awsContentVariants } from '../utils/icons';
 import { getDocsUrl } from '../utils/docs';
-import { Menu, X, Download, Linkedin, Github, Mail, User, MessageSquare, Send, Sun, Moon, MapPin, Calendar, Award, Briefcase, ChevronDown, ChevronUp, Cloud, Database, Terminal, Code, Box, Server, Zap, GitBranch, FileCode, BarChart, FileText } from 'lucide-react';
+import { Menu, X, Download, Linkedin, Github, Mail, User, MessageSquare, Send, Sun, Moon, MapPin, Calendar, Award, Briefcase, ChevronDown, ChevronUp, Cloud, Database, Terminal, Code, Box, Server, Zap, GitBranch, FileCode, BarChart, FileText, CheckCircle, XCircle, Loader } from 'lucide-react';
 
 const StarBackground = ({ isDarkMode }) => {
   useEffect(() => {
@@ -82,13 +83,72 @@ const Portfolio = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isAwsOpen, setIsAwsOpen] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: null, message: '' });
 
-  const handleSubmit = () => {
-    if (formData.name && formData.email && formData.message) {
-      alert('Message sent! (This is a demo)');
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.message) {
+      setSubmitStatus({ type: 'error', message: 'Please fill in all fields' });
+      setTimeout(() => setSubmitStatus({ type: null, message: '' }), 5000);
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitStatus({ type: 'error', message: 'Please enter a valid email address' });
+      setTimeout(() => setSubmitStatus({ type: null, message: '' }), 5000);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      // Get EmailJS credentials from environment variables
+      // To set up EmailJS:
+      // 1. Sign up at https://www.emailjs.com/
+      // 2. Create an email service (Gmail, Outlook, etc.)
+      // 3. Create an email template with variables: {{from_name}}, {{from_email}}, {{message}}
+      // 4. Get your Public Key from Account > API Keys
+      // 5. Create a .env.local file with:
+      //    NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
+      //    NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
+      //    NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error('EmailJS is not configured. Please set up environment variables.');
+      }
+
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        message: formData.message,
+        to_name: 'Pravin Mathew',
+      };
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
+      setSubmitStatus({ type: 'success', message: 'Message sent successfully! I\'ll get back to you soon.' });
       setFormData({ name: '', email: '', message: '' });
-    } else {
-      alert('Please fill in all fields');
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSubmitStatus({ type: null, message: '' }), 5000);
+    } catch (error) {
+      console.error('EmailJS error:', error);
+      if (error.message && error.message.includes('not configured')) {
+        setSubmitStatus({ type: 'error', message: 'Contact form is not configured yet. Please contact me directly via email or LinkedIn.' });
+      } else {
+        setSubmitStatus({ type: 'error', message: 'Failed to send message. Please try again or contact me directly via email.' });
+      }
+      setTimeout(() => setSubmitStatus({ type: null, message: '' }), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -516,8 +576,8 @@ const Portfolio = () => {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6 animate-slideInLeft">
               <div className="relative z-10">
-                <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fadeIn">
-                  Hi, I'm <span className="bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent animate-pulse">Pravin A Mathew</span>
+                <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fadeIn text-white drop-shadow-lg">
+                  Hi, I'm <span className="bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">Pravin A Mathew</span>
                 </h1>
                 <p className="text-xl md:text-2xl mb-4 text-red-400 flex items-center transform hover:translate-x-2 transition-transform duration-300">
                   <Briefcase className="mr-2" size={24} />
@@ -581,7 +641,7 @@ const Portfolio = () => {
   {/* Education Section */}
       <section id="education" className={`py-24 px-6 sm:px-8 lg:px-12 ${isDarkMode ? 'bg-gray-900/50' : 'bg-gradient-to-br from-red-50 to-yellow-50'}`}>
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent animate-fadeIn">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent animate-fadeIn drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] brightness-110">
             Education
           </h2>
           <p className={`text-center mb-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} animate-fadeIn`}>
@@ -615,7 +675,7 @@ const Portfolio = () => {
       {/* Experience Section */}
       <section id="experience" className="py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] brightness-110">
             Experience
           </h2>
           <p className={`text-center mb-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -653,7 +713,7 @@ const Portfolio = () => {
       {/* Skills Section */}
       <section id="skills" className={`py-24 px-6 sm:px-8 lg:px-12 ${isDarkMode ? 'bg-gray-900/50' : 'bg-gradient-to-br from-red-50 to-yellow-50'}`}>
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] brightness-110">
             Skills & Technologies
           </h2>
           <p className={`text-center mb-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -663,7 +723,7 @@ const Portfolio = () => {
           <div className="space-y-16">
             {/* Cloud Platforms */}
             <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-red-100 to-yellow-100'} rounded-2xl p-10 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} animate-slideInUp`}>
-              <h3 className="text-2xl font-bold mb-8 text-red-400">Cloud Platforms</h3>
+              <h3 className="text-2xl font-bold mb-8 bg-gradient-to-r from-red-400 via-red-300 to-yellow-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] brightness-110">Cloud Platforms</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 <AnimatePresence>
                   {skills.cloud.map((skill, index) => (
@@ -710,7 +770,7 @@ const Portfolio = () => {
             {/* AWS Services (separate card between Cloud Platforms and DevOps) */}
             <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-red-100 to-yellow-100'} rounded-2xl p-6 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} shadow-md ${isDarkMode ? 'shadow-black/20' : 'shadow-gray-200'} animate-slideInUp`} style={{marginTop: '-0.5rem'}}>
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">AWS Services</h3>
+                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(251,191,36,0.5)] brightness-110">AWS Services</h3>
                 <button aria-expanded={isAwsOpen} onClick={() => setIsAwsOpen((s) => !s)} className="flex items-center gap-2 text-sm px-3 py-1 rounded-md hover:bg-gray-700/20">
                   {isAwsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />} <span>{isAwsOpen ? 'Collapse' : 'Expand'}</span>
                 </button>
@@ -815,7 +875,7 @@ const Portfolio = () => {
               <div className="space-y-12">
                 {/* DevOps Skills */}
                 <div>
-                  <h3 className="text-2xl font-bold mb-8 text-yellow-400">DevOps & Infrastructure</h3>
+                  <h3 className="text-2xl font-bold mb-8 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-200 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(251,191,36,0.5)] brightness-110">DevOps & Infrastructure</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     <AnimatePresence>
                       {skills.devops.map((skill, index) => (
@@ -863,7 +923,7 @@ const Portfolio = () => {
 
                 {/* Development Skills */}
                 <div>
-                  <h3 className="text-2xl font-bold mb-8 text-yellow-400">Development</h3>
+                  <h3 className="text-2xl font-bold mb-8 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-200 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(251,191,36,0.5)] brightness-110">Development</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     <AnimatePresence>
                       {skills.development.map((skill, index) => (
@@ -956,7 +1016,7 @@ const Portfolio = () => {
       {/* Projects Section */}
       <section id="projects" className="py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] brightness-110">
             Projects
           </h2>
           <p className={`text-center mb-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -971,7 +1031,7 @@ const Portfolio = () => {
               
               return (
                 <div key={category} className="animate-slideInUp">
-                  <h3 className="text-3xl md:text-4xl font-bold mb-8 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+                  <h3 className="text-3xl md:text-4xl font-bold mb-8 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,191,36,0.5)] brightness-110">
                     {category}
                   </h3>
           <div className="grid md:grid-cols-2 gap-10">
@@ -1006,13 +1066,36 @@ const Portfolio = () => {
       {/* Contact Section */}
       <section id="contact" className={`py-24 px-6 sm:px-8 lg:px-12 ${isDarkMode ? 'bg-gray-900/50' : 'bg-gradient-to-br from-red-50 to-yellow-50'}`}>
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-400 via-yellow-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.6)] brightness-110">
             Get In Touch
           </h2>
           <p className={`text-center mb-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             I'd love to hear from you. Send me a message and I'll respond as soon as possible.
           </p>
-          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-red-100 to-yellow-100'} rounded-2xl p-10 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} animate-slideInUp`}>
+          <form onSubmit={handleSubmit} className={`${isDarkMode ? 'bg-gray-800' : 'bg-gradient-to-br from-red-100 to-yellow-100'} rounded-2xl p-10 border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} animate-slideInUp`}>
+            {/* Status Messages */}
+            {submitStatus.type && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+                  submitStatus.type === 'success'
+                    ? `${isDarkMode ? 'bg-green-900/30 border-green-500' : 'bg-green-100 border-green-500'} border`
+                    : `${isDarkMode ? 'bg-red-900/30 border-red-500' : 'bg-red-100 border-red-500'} border`
+                }`}
+              >
+                {submitStatus.type === 'success' ? (
+                  <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
+                ) : (
+                  <XCircle className="text-red-500 flex-shrink-0" size={20} />
+                )}
+                <p className={`${submitStatus.type === 'success' ? 'text-green-600' : 'text-red-600'} ${isDarkMode ? 'text-white' : ''}`}>
+                  {submitStatus.message}
+                </p>
+              </motion.div>
+            )}
+
             <div className="mb-6">
               <label className="flex items-center mb-2 font-semibold">
                 <User size={18} className="mr-2" />
@@ -1023,7 +1106,9 @@ const Portfolio = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="Your full name"
-                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gradient-to-br from-red-50 to-yellow-50 border-gray-300'} border focus:border-red-500 outline-none transition-all duration-300 focus:shadow-lg focus:shadow-red-500/20`}
+                disabled={isSubmitting}
+                required
+                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gradient-to-br from-red-50 to-yellow-50 border-gray-300'} border focus:border-red-500 outline-none transition-all duration-300 focus:shadow-lg focus:shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed`}
               />
             </div>
             <div className="mb-6">
@@ -1036,7 +1121,9 @@ const Portfolio = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 placeholder="your.email@example.com"
-                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-gradient-to-br from-red-50 to-yellow-50 border-gray-300'} border focus:border-yellow-500 outline-none transition-colors`}
+                disabled={isSubmitting}
+                required
+                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-gradient-to-br from-red-50 to-yellow-50 border-gray-300'} border focus:border-yellow-500 outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               />
             </div>
             <div className="mb-6">
@@ -1049,14 +1136,29 @@ const Portfolio = () => {
                 onChange={(e) => setFormData({...formData, message: e.target.value})}
                 placeholder="Your message here..."
                 rows="5"
-                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'} border focus:border-blue-500 outline-none transition-colors resize-none`}
+                disabled={isSubmitting}
+                required
+                className={`w-full px-4 py-3 rounded-lg ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-300'} border focus:border-blue-500 outline-none transition-colors resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
               />
             </div>
-            <button onClick={handleSubmit} className="w-full bg-gradient-to-r from-red-500 to-yellow-500 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-300 flex items-center justify-center transform hover:scale-105 hover:shadow-2xl hover:shadow-red-500/50">
-              <Send size={20} className="mr-2" />
-              Send Message
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-red-500 to-yellow-500 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-300 flex items-center justify-center transform hover:scale-105 hover:shadow-2xl hover:shadow-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader className="mr-2 animate-spin" size={20} />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send size={20} className="mr-2" />
+                  Send Message
+                </>
+              )}
             </button>
-          </div>
+          </form>
         </div>
       </section>
 
