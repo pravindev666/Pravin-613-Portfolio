@@ -326,10 +326,8 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 👨‍💻 Author
 
 **Pravin A Mathew**
-- Website: [Your Website]
 - LinkedIn: [linkedin.com/in/pravin-a-mathew-593799327](https://linkedin.com/in/pravin-a-mathew-593799327)
 - GitHub: [@pravindev666](https://github.com/pravindev666)
-- Email: [Your Email]
 
 ## 🙏 Acknowledgments
 
