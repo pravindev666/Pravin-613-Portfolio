@@ -121,7 +121,19 @@ const Portfolio = () => {
       const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
       const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
+      // Debug logging (remove in production if needed)
+      console.log('EmailJS Config:', {
+        serviceId: serviceId ? '✓ Set' : '✗ Missing',
+        templateId: templateId ? '✓ Set' : '✗ Missing',
+        publicKey: publicKey ? '✓ Set' : '✗ Missing'
+      });
+
       if (!serviceId || !templateId || !publicKey) {
+        console.error('Missing EmailJS configuration:', {
+          serviceId: !!serviceId,
+          templateId: !!templateId,
+          publicKey: !!publicKey
+        });
         throw new Error('EmailJS is not configured. Please set up environment variables.');
       }
 
